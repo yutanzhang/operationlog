@@ -1,8 +1,8 @@
 package com.d9cloud.operationlog.aspects;
 
 import com.d9cloud.operationlog.annotation.OperationLog;
+import com.d9cloud.operationlog.entity.bo.OperationLogBO;
 import com.d9cloud.operationlog.entity.constants.OperationLogConstant;
-import com.d9cloud.operationlog.entity.po.OperationLogPO;
 import com.d9cloud.operationlog.utils.OperationLogUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -39,9 +39,9 @@ public class OperationLogAspect {
         Object result;
         result = pjp.proceed();
         try {
-            OperationLogPO operationLogPO = new OperationLogPO();
-            operationLogPO.setOperateDate(new Date());
-            operationLogPO.setUserId(OperationLogUtils.getUserId());
+            OperationLogBO operationLogBO = new OperationLogBO();
+            operationLogBO.setOperateDate(new Date());
+            operationLogBO.setUserId(OperationLogUtils.getUserId());
 
             // 获取操作菜单
             Class<?> clazz = pjp.getTarget().getClass();
@@ -50,7 +50,7 @@ public class OperationLogAspect {
                 return result;
             }
             String operationTag = classOperation.value();
-            operationLogPO.setOperateTag(operationTag);
+            operationLogBO.setOperateTag(operationTag);
 
             // 获取操作描述
             MethodSignature signature = (MethodSignature) pjp.getSignature();
@@ -60,16 +60,16 @@ public class OperationLogAspect {
                 return result;
             }
             String operationDesc = methodOperation.value();
-            operationLogPO.setOperateDesc(operationDesc);
+            operationLogBO.setOperateDesc(operationDesc);
 
-            operationLogPO.setTarget(methodOperation.target());
+            operationLogBO.setTarget(methodOperation.target());
             Object targetId = getTargetValue(methodOperation.field(), method.getParameters(), pjp.getArgs());
-            operationLogPO.setTargetValue(targetId);
-            LOG.info("采集到操作日志：{}", operationLogPO);
+            operationLogBO.setTargetValue(targetId);
+            LOG.info("采集到操作日志：{}", operationLogBO);
 
             // 发送到redis队列中
             ListOperations<String, Object> listOperations = redisTemplate.opsForList();
-            listOperations.leftPush(OperationLogConstant.LOG_QUEUE, operationLogPO);
+            listOperations.leftPush(OperationLogConstant.LOG_QUEUE, operationLogBO);
         } catch (Exception e) {
             LOG.error("采集操作日志异常:", e);
         }

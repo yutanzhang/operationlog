@@ -1,4 +1,4 @@
-package com.d9cloud.operationlog.entity.po;
+package com.d9cloud.operationlog.entity.bo;
 
 import com.d9cloud.operationlog.entity.enums.OperateTarget;
 import lombok.Data;
@@ -12,7 +12,7 @@ import java.util.Date;
  * @date: Created on 2022/05/17
  */
 @Data
-public class OperationLogPO {
+public class OperationLogBO {
 
     /**
      * 坐席id

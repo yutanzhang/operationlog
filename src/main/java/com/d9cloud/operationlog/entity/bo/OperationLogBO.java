@@ -1,6 +1,5 @@
 package com.d9cloud.operationlog.entity.bo;
 
-import com.d9cloud.operationlog.entity.enums.OperateTarget;
 import lombok.Data;
 
 import java.util.Date;
@@ -18,16 +17,6 @@ public class OperationLogBO {
      * 坐席id
      */
     private Integer userId;
-
-    /**
-     * 操作对象(部门、用户)
-     */
-    private OperateTarget target;
-
-    /**
-     * 对象id
-     */
-    private Object targetValue;
 
     /**
      * 操作菜单

@@ -4,6 +4,7 @@ import com.d9cloud.operationlog.annotation.OperationLog;
 import com.d9cloud.operationlog.entity.bo.OperationLogBO;
 import com.d9cloud.operationlog.entity.constants.OperationLogConstant;
 import com.d9cloud.operationlog.utils.OperationLogUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -14,9 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.Date;
 
 /**
@@ -27,9 +26,12 @@ import java.util.Date;
  */
 @Aspect
 public class OperationLogAspect {
+    
+    public static final ThreadLocal<Object> threadLocal = new ThreadLocal<>();
+    public static final String BLANK = " ";
 
     private Logger LOG = LoggerFactory.getLogger(OperationLogAspect.class);
-
+    
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
@@ -45,11 +47,12 @@ public class OperationLogAspect {
 
             // 获取操作菜单
             Class<?> clazz = pjp.getTarget().getClass();
+
             OperationLog classOperation = clazz.getAnnotation(OperationLog.class);
             if (classOperation == null) {
                 return result;
             }
-            String operationTag = classOperation.value();
+            String operationTag = classOperation.tag();
             operationLogBO.setOperateTag(operationTag);
 
             // 获取操作描述
@@ -59,12 +62,20 @@ public class OperationLogAspect {
             if (methodOperation == null) {
                 return result;
             }
-            String operationDesc = methodOperation.value();
-            operationLogBO.setOperateDesc(operationDesc);
+            String operationDesc = methodOperation.desc();
 
-            operationLogBO.setTarget(methodOperation.target());
-            Object targetId = getTargetValue(methodOperation.field(), method.getParameters(), pjp.getArgs());
-            operationLogBO.setTargetValue(targetId);
+            // operationLogBO.setTarget(methodOperation.target());
+            // Object targetId = getTargetValue(methodOperation.field(), method.getParameters(), pjp.getArgs());
+            // operationLogBO.setTargetValue(targetId);
+            Object target = threadLocal.get();
+            operationLogBO.setOperateDesc(operationDesc + BLANK + target);
+
+            String value = methodOperation.value();
+            if (StringUtils.isNotBlank(value) && value.contains("+")) {
+                String[] tagAndDesc = value.split("\\+");
+                operationLogBO.setOperateTag(tagAndDesc[0]);
+                operationLogBO.setOperateDesc(tagAndDesc[1] + BLANK + target);
+            }
             LOG.info("采集到操作日志：{}", operationLogBO);
 
             // 发送到redis队列中
@@ -72,11 +83,13 @@ public class OperationLogAspect {
             listOperations.leftPush(OperationLogConstant.LOG_QUEUE, operationLogBO);
         } catch (Exception e) {
             LOG.error("采集操作日志异常:", e);
+        } finally {
+            threadLocal.remove();
         }
         return result;
     }
 
-    private Object getTargetValue(String paramFullName, Parameter[] parameters, Object[] params) throws Exception {
+    /*private Object getTargetValue(String paramFullName, Parameter[] parameters, Object[] params) throws Exception {
         if ("".equals(paramFullName)) {
             return null;
         }
@@ -98,6 +111,6 @@ public class OperationLogAspect {
             }
         }
         return null;
-    }
+    }*/
 
 }

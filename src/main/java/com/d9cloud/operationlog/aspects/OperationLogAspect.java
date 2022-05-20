@@ -68,13 +68,13 @@ public class OperationLogAspect {
             // Object targetId = getTargetValue(methodOperation.field(), method.getParameters(), pjp.getArgs());
             // operationLogBO.setTargetValue(targetId);
             Object target = threadLocal.get();
-            operationLogBO.setOperateDesc(operationDesc + BLANK + target);
+            operationLogBO.setOperateDesc(operationDesc + BLANK + (target == null ? "" : target));
 
             String value = methodOperation.value();
             if (StringUtils.isNotBlank(value) && value.contains("+")) {
                 String[] tagAndDesc = value.split("\\+");
                 operationLogBO.setOperateTag(tagAndDesc[0]);
-                operationLogBO.setOperateDesc(tagAndDesc[1] + BLANK + target);
+                operationLogBO.setOperateDesc(tagAndDesc[1] + BLANK + (target == null ? "" : target));
             }
             LOG.info("采集到操作日志：{}", operationLogBO);
 

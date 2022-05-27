@@ -13,7 +13,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.d9cloud</groupId>
     <artifactId>operationlog-spring-boot-starter</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.1-RELEASE</version>
     <name>opreationlog</name>
 
     <properties>
@@ -107,5 +107,13 @@
             </resource>
         </resources>
     </build>
-    
+
+    <distributionManagement>
+        <repository>
+            <id>nexus</id>
+            <name>releases Repository</name>
+            <url>http://172.16.2.13:9527/repository/maven-releases/</url>
+        </repository>
+    </distributionManagement>
+
 </project>
